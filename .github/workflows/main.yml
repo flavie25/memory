@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  test-memory:
+    name: Run test memory
+    runs-on: [self-hosted]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run file command on all .jpg files
+        run: |
+          find . -name '*.jpg' -exec file {} \;
