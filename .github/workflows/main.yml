@@ -102,5 +102,5 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
             cd ~
             echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S docker-compose pull
-            echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S docker-compose up -d
+            echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S DOCKER_HUB_USERNAME="${{ secrets.DOCKER_HUB_USERNAME }}" docker-compose up -d
           EOF

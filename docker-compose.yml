@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   memory:
-    image: ${DOCKER_HUB_USERNAME}/memory:latest
+    image: "${{ secrets.DOCKER_HUB_USERNAME }}/memory:latest"
     ports:
       - "80:80"
-    restart: always  
+    restart: always
