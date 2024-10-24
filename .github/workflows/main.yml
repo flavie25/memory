@@ -1,0 +1,103 @@
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  test-memory:
+    name: Run test memory
+    runs-on: [self-hosted]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Find and run file command on all .jpg files
+        run: |
+          # Vérifier chaque fichier .jpg
+          find . -name '*.jpg' | while read file; do
+            echo "Analyzing $file"
+            # Exécuter la commande file et vérifier la sortie
+            if file "$file" | grep -q "JPEG"; then
+              echo "$file is valid."
+            else
+              echo "$file is corrupt. Replacing with the replacement image."
+            fi
+          done
+
+  build-memory:
+    name: Build Docker Image
+    runs-on: [self-hosted]
+    needs: test-memory
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Print working directory
+        run: |
+          pwd  # Affiche le répertoire courant
+          ls -l  # Liste les fichiers du répertoire courant
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/memory:latest .
+
+  push-memory:
+    name: Push Docker Image to Docker Hub
+    runs-on: [self-hosted]
+    needs: build-memory
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" -p  "${{ secrets.DOCKER_HUB_PASSWORD }}"
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/memory:latest
+
+  deploy-memory:
+    name: Deploy to Remote Server
+    runs-on: [self-hosted]
+    needs: push-memory
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Docker Compose on remote server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+            echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S apt-get update
+            echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S apt-get install -y docker-compose
+          EOF
+
+      - name: Copy docker-compose.yml to remote server
+        run: |
+          scp -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:~/docker-compose.yml
+
+      - name: Pull Docker images and start containers
+        run: |
+          if [ "$(docker ps -q -f name=memory-SSH)" ]; then
+            echo "Container 'memory-SSH' is running. Stopping it."
+            docker stop memory-SSH
+          else
+            echo "Container 'memory-SSH' is not running."
+          fi
+
+          if [ "$(docker ps -a -q -f name=memory-SSH)" ]; then
+            echo "Container 'memory-SSH' exists. Removing it."
+            docker rm memory-SSH
+          else
+            echo "Container 'memory-SSH' does not exist."
+          fi
+
+          ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+            cd ~
+            export DOCKER_HUB_USERNAME="${{ secrets.DOCKER_HUB_USERNAME }}"
+            echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S docker-compose pull
+            echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S docker-compose up -d
+          EOF
