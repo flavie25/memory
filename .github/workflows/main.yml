@@ -75,9 +75,13 @@ jobs:
       - name: Install Docker Compose on remote server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
-            sudo -S apt-get update
-            sudo -S apt-get install -y docker-compose
+            echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S apt-get update
+            echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S apt-get install -y docker-compose
           EOF
+
+      - name: Copy docker-compose.yml to remote server
+        run: |
+          scp -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:~/docker-compose.yml
 
       - name: Pull Docker images and start containers
         run: |
@@ -95,8 +99,8 @@ jobs:
               echo "Container 'memory-SSH' does not exist."
           fi
 
-          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
-            pwd
-            docker-compose pull
-            docker-compose up -d
+          ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+            cd ~
+            echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S docker-compose pull
+            echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S docker-compose up -d
           EOF
