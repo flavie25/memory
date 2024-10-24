@@ -75,8 +75,8 @@ jobs:
       - name: Install Docker Compose on remote server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
-            sudo apt-get update
-            sudo apt-get install -y docker-compose
+            sudo -S apt-get update
+            sudo -S apt-get install -y docker-compose
           EOF
 
       - name: Pull Docker images and start containers
