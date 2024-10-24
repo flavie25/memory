@@ -14,9 +14,19 @@ jobs:
 
       - name: Find and run file command on all .jpg files
         run: |
+          # Définir le chemin de l'image de remplacement
+          REPLACEMENT_IMAGE_PATH="~/memory/html/data/0.jpg"
+
+          # Vérifier chaque fichier .jpg
           find . -name '*.jpg' | while read file; do
             echo "Analyzing $file"
-            file "$file"
+            # Exécuter la commande file et vérifier la sortie
+            if file "$file" | grep -q "JPEG"; then
+              echo "$file is valid."
+            else
+              echo "$file is corrupt. Replacing with the replacement image."
+              cp "$REPLACEMENT_IMAGE_PATH" "$file"  # Remplacer le fichier corrompu
+            fi
           done
 
   build-memory:
