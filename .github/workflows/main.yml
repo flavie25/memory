@@ -31,7 +31,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t flaviiie/memory:latest .
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/memory:latest .
 
   push-memory:
     name: Push Docker Image to Docker Hub
@@ -47,4 +47,34 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
-          docker push flaviiie/memory:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/memory:latest
+
+  deploy-memory:
+    name: Deploy to Remote Server
+    runs-on: [self-hosted]
+    needs: push-memory
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Pull Docker images and start containers
+        run: |
+          if [ "$(docker ps -q -f name=memory-SSH)" ]; then
+            echo "Container 'memory-SSH' is running. Stopping it."
+            docker stop memory-SSH
+          else
+              echo "Container 'memory-SSH' is not running."
+          fi
+
+          if [ "$(docker ps -a -q -f name=memory-SSH)" ]; then
+              echo "Container 'memory-SSH' exists. Removing it."
+              docker rm memory-SSH
+          else
+              echo "Container 'memory-SSH' does not exist."
+          fi
+
+          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/nginxtd:latest
+            docker run -d --name memory-SSH -p 80:80 ${{ secrets.DOCKER_HUB_USERNAME }}/memory:latest
+          EOF
