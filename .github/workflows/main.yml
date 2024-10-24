@@ -24,11 +24,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Print working directory
-        run: |
-          pwd  # Affiche le répertoire courant
-          ls -l  # Liste les fichiers du répertoire courant
-
       - name: Build Docker image
         run: |
           docker build -t flaviiie/memory:latest .
