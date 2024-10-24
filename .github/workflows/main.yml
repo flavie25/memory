@@ -75,6 +75,6 @@ jobs:
           fi
 
           ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/nginxtd:latest
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/memory:latest
             docker run -d --name memory-SSH -p 80:80 ${{ secrets.DOCKER_HUB_USERNAME }}/memory:latest
           EOF
