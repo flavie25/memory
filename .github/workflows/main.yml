@@ -89,18 +89,19 @@ jobs:
             echo "Container 'memory-SSH' is running. Stopping it."
             docker stop memory-SSH
           else
-              echo "Container 'memory-SSH' is not running."
+            echo "Container 'memory-SSH' is not running."
           fi
 
           if [ "$(docker ps -a -q -f name=memory-SSH)" ]; then
-              echo "Container 'memory-SSH' exists. Removing it."
-              docker rm memory-SSH
+            echo "Container 'memory-SSH' exists. Removing it."
+            docker rm memory-SSH
           else
-              echo "Container 'memory-SSH' does not exist."
+            echo "Container 'memory-SSH' does not exist."
           fi
 
           ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
             cd ~
+            export DOCKER_HUB_USERNAME="${{ secrets.DOCKER_HUB_USERNAME }}"
             echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S docker-compose pull
-            echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S DOCKER_HUB_USERNAME="${{ secrets.DOCKER_HUB_USERNAME }}" docker-compose up -d
+            echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S docker-compose up -d
           EOF
