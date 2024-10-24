@@ -12,9 +12,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Run file command on all .jpg files
+      - name: Find and run file command on all .jpg files
         run: |
-          find . -name '*.jpg' -exec file {} \;
+          find . -name '*.jpg' | while read file; do
+            echo "Analyzing $file"
+            file "$file"
+          done
+
   build-memory:
     name: Build Docker Image
     runs-on: [self-hosted]
