@@ -15,7 +15,7 @@ jobs:
       - name: Find and run file command on all .jpg files
         run: |
           # Définir le chemin de l'image de remplacement
-          REPLACEMENT_IMAGE_PATH="~/memory/html/data/0.jpg"
+          REPLACEMENT_IMAGE_PATH="./html/data/poussin.jpeg"
 
           # Vérifier chaque fichier .jpg
           find . -name '*.jpg' | while read file; do
