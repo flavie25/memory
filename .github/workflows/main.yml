@@ -72,23 +72,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Pull Docker images and start containers
+      - name: Install Docker Compose on remote server
         run: |
-          if [ "$(docker ps -q -f name=memory-SSH)" ]; then
-            echo "Container 'memory-SSH' is running. Stopping it."
-            docker stop memory-SSH
-          else
-              echo "Container 'memory-SSH' is not running."
-          fi
-
-          if [ "$(docker ps -a -q -f name=memory-SSH)" ]; then
-              echo "Container 'memory-SSH' exists. Removing it."
-              docker rm memory-SSH
-          else
-              echo "Container 'memory-SSH' does not exist."
-          fi
-
           ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+            sudo apt-get update
+            sudo apt-get install -y docker-compose
+          EOF
+
+      - name: Pull Docker images and start containers using docker-compose
+        run: |
+          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+            pwd
             docker-compose pull
             docker-compose up -d
           EOF
